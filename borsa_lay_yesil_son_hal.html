@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Borsa Lay Hesaplayıcı</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;margin:0;background:#f3f4f6;color:#111827}
+.wrap{max-width:560px;margin:auto;padding:18px}
+.card{background:#fff;border-radius:18px;padding:18px;box-shadow:0 4px 18px rgba(0,0,0,.10)}
+h1{font-size:28px;margin:0 0 6px}
+.sub{color:#6b7280;margin:0 0 18px;font-size:14px}
+label{display:block;margin-top:13px;font-weight:800;font-size:17px}
+input{width:100%;font-size:26px;padding:13px 15px;border:1px solid #d1d5db;border-radius:13px;box-sizing:border-box;margin-top:5px}
+button{width:100%;margin-top:18px;padding:15px;border:0;border-radius:13px;font-size:22px;font-weight:900;background:#111827;color:white}
+.clear{background:#e5e7eb;color:#111827;margin-top:10px}
+.resultBox{margin-top:18px;padding:16px;border-radius:15px;background:#eef2ff;transition:.2s}
+.resultBox.done{background:#dcfce7;border:2px solid #16a34a}
+.resultTitle{font-size:15px;color:#4b5563}
+.big{font-size:42px;font-weight:900;margin-top:4px}
+.resultBox.done .big{color:#087a24}
+.row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #e5e7eb;padding:12px 0;font-size:17px}
+.row span{color:#374151}.row b{text-align:right}
+.good{color:#087a24}.bad{color:#b00020}
+.note{font-size:13px;color:#6b7280;margin-top:14px;line-height:1.45}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+<h1>Borsa Lay Hesaplayıcı</h1>
+<p class="sub">Kayıp bonus oranını 2’ye bölerek eksik lay hesaplar.</p>
+
+<label>Site oranı</label>
+<input id="siteOrani" type="number" inputmode="decimal" step="0.01" placeholder="Örn: 1.60">
+
+<label>Borsa oranı</label>
+<input id="borsaOrani" type="number" inputmode="decimal" step="0.01" placeholder="Örn: 1.70">
+
+<label>Bahis miktarı (€)</label>
+<input id="miktar" type="number" inputmode="decimal" step="0.01" value="1000">
+
+<label>Borsa komisyonu (%)</label>
+<input id="komisyon" type="number" inputmode="decimal" step="0.1" value="3">
+
+<label>Kayıp bonus oranı (%)</label>
+<input id="kayipBonus" type="number" inputmode="decimal" step="1" value="30">
+
+<button onclick="hesapla()">Hesapla</button>
+
+<div class="resultBox" id="sonucKutusu">
+  <div class="resultTitle">Borsaya girilecek eksik lay</div>
+  <div class="big" id="girilecek">0.00 €</div>
+</div>
+
+<div class="row"><span>Kullanılan eksik lay</span><b id="eksikOran">%0.00</b></div>
+<div class="row"><span>Normal lay stake</span><b id="normal">0.00 €</b></div>
+<div class="row"><span>Risk / Liability</span><b id="risk">0.00 €</b></div>
+<div class="row"><span>Site kazanırsa net</span><b id="siteKazanir">0.00 €</b></div>
+<div class="row"><span>Site kaybederse net</span><b id="siteKaybeder">0.00 €</b></div>
+
+<button class="clear" onclick="temizle()">Temizle</button>
+
+<p class="note">
+Kural: Kayıp bonusu %30 ise eksik lay %15 alınır. Komisyon sadece borsada kazanan lay bahsinden düşülür.
+</p>
+</div>
+</div>
+
+<script>
+function n(id){
+  var v=document.getElementById(id).value;
+  v=String(v).replace(",",".");
+  var x=parseFloat(v);
+  return isNaN(x)?0:x;
+}
+function para(x){
+  if(!isFinite(x)) x=0;
+  return x.toFixed(2)+" €";
+}
+function yazPara(id,x,renk){
+  var e=document.getElementById(id);
+  e.textContent=para(x);
+  e.className="";
+  if(renk){ e.classList.add(x>=0?"good":"bad"); }
+}
+function yazOran(x){
+  document.getElementById("eksikOran").textContent="%"+x.toFixed(2);
+}
+function sifirlaSonuc(){
+  document.getElementById("sonucKutusu").classList.remove("done");
+  document.getElementById("girilecek").textContent="0.00 €";
+  yazOran(0);
+  ["normal","risk","siteKazanir","siteKaybeder"].forEach(function(id){yazPara(id,0);});
+}
+function hesapla(){
+  var site=n("siteOrani");
+  var borsa=n("borsaOrani");
+  var miktar=n("miktar");
+  var kom=n("komisyon")/100;
+  var bonus=n("kayipBonus");
+
+  if(site<=1 || borsa<=1 || miktar<=0 || (borsa-kom)<=0){
+    sifirlaSonuc();
+    return;
+  }
+
+  var eksikYuzde = bonus / 2;
+  var eksik = eksikYuzde / 100;
+
+  var normal = (miktar * site) / (borsa - kom);
+  var girilecek = normal * (1 - eksik);
+  var risk = girilecek * (borsa - 1);
+
+  var siteKazanir = miktar * (site - 1) - risk;
+  var siteKaybeder = -miktar + girilecek * (1 - kom);
+
+  document.getElementById("girilecek").textContent = para(girilecek);
+  document.getElementById("sonucKutusu").classList.add("done");
+  yazOran(eksikYuzde);
+  yazPara("normal",normal);
+  yazPara("risk",risk);
+  yazPara("siteKazanir",siteKazanir,true);
+  yazPara("siteKaybeder",siteKaybeder,true);
+}
+function temizle(){
+  document.getElementById("siteOrani").value="";
+  document.getElementById("borsaOrani").value="";
+  document.getElementById("miktar").value="1000";
+  document.getElementById("komisyon").value="3";
+  document.getElementById("kayipBonus").value="30";
+  sifirlaSonuc();
+}
+sifirlaSonuc();
+</script>
+</body>
+</html>
