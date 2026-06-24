@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kayıp Bonusu Hesaplayıcı V5</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f3f4f6;padding:20px}
+.card{max-width:500px;margin:auto;background:#fff;padding:20px;border-radius:16px}
+h1{font-size:28px}
+label{display:block;margin-top:15px;font-weight:bold}
+input{width:100%;padding:14px;font-size:24px;border:1px solid #ccc;border-radius:10px;box-sizing:border-box}
+button{width:100%;margin-top:20px;padding:15px;font-size:24px;font-weight:bold;background:#111827;color:#fff;border:none;border-radius:10px}
+.result{margin-top:20px;border-radius:12px;padding:15px;border:2px solid #d1d5db;background:#f3f4f6}
+.result.active{background:#dcfce7;border-color:#16a34a}
+.big{font-size:54px;font-weight:bold;color:#087a24;margin-top:8px;min-height:56px}
+.note{margin-top:10px;color:#555}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Kayıp Bonusu Hesaplayıcı V5</h1>
+
+<label>Bahis miktarı (€)</label>
+<input id="bahis" type="number" value="1000">
+
+<label>Kayıp bonus oranı (%)</label>
+<input id="oran" type="number" value="30">
+
+<button onclick="hesapla()">Hesapla</button>
+
+<div id="box" class="result">
+<div>Borsaya yatırılacak tutar (€)</div>
+<div id="sonuc" class="big"></div>
+</div>
+
+<div class="note">Formül: Bahis miktarı − (Kayıp bonusunun yarısı)</div>
+</div>
+
+<script>
+function hesapla(){
+ const bahis=parseFloat(document.getElementById('bahis').value)||0;
+ const oran=parseFloat(document.getElementById('oran').value)||0;
+ const bonus=(bahis*oran)/100;
+ const yariBonus=bonus/2;
+ const yatirilacak=bahis-yariBonus;
+ document.getElementById('sonuc').innerHTML=yatirilacak.toFixed(2)+' €';
+ document.getElementById('box').classList.add('active');
+}
+</script>
+</body>
+</html>
